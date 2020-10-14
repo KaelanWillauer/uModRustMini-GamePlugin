@@ -1,1 +1,1 @@
-# uplayRustMini-GamePlugin
+# uModRustMini-GamePlugin
