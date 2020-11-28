@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Oxide.Core.Libraries.Covalence;
 using UnityEngine;
 
@@ -25,9 +25,9 @@ namespace Oxide.Plugins
                 case 1:
                     foreach (BasePlayer player in playerList)
                     {
-                        teleport(player);
-                        giveItems(player);
+                        player.DieInstantly();
                     }
+                    wipe();
 
                     break;
 
@@ -67,13 +67,28 @@ namespace Oxide.Plugins
 
         private void giveItems(BasePlayer player)
         {
+            
             player.SetHealth(100);
+            PrintToChat("Worked");
             switch (ID)
             {
                 case 1:
-                    rust.RunServerCommand("inventory.giveto " + player.displayName + " lr 1");
-                    rust.RunServerCommand("inventory.giveto " + player.displayName + " ammo.rifle 200");
-                    rust.RunServerCommand("inventory.giveto " + player.displayName + " pumpkin 20");
+                    player.GiveItem(ItemManager.CreateByItemID(-1812555177)); // lr
+                    player.GiveItem(ItemManager.CreateByItemID(1545779598)); // ak
+                    player.GiveItem(ItemManager.CreateByItemID(1079279582, 20)); // medical
+                    player.GiveItem(ItemManager.CreateByItemID(-1211166256, 200)); // 5.56
+                    player.GiveItem(ItemManager.CreateByItemID(99588025, 2)); // wood wall
+                    player.GiveItem(ItemManager.CreateByItemID(-567909622, 20)); // pumpkins
+
+                    player.GiveItem(ItemManager.CreateByItemID(442289265)); // holo
+                    player.GiveItem(ItemManager.CreateByItemID(-194953424)); // mask
+                    player.GiveItem(ItemManager.CreateByItemID(1751045826)); // hoodie
+                    player.GiveItem(ItemManager.CreateByItemID(1110385766)); // chest
+                    player.GiveItem(ItemManager.CreateByItemID(237239288)); // pants
+                    player.GiveItem(ItemManager.CreateByItemID(1850456855)); // kilt
+                    player.GiveItem(ItemManager.CreateByItemID(-1108136649)); // tac gloves
+                    player.GiveItem(ItemManager.CreateByItemID(-1549739227)); // boots
+
                     break;
             }
 
@@ -129,7 +144,7 @@ namespace Oxide.Plugins
             }
         }
 
-        [ChatCommand("setspawn")]
+        [ConsoleCommand("setspawn")]
         private void setSpawn(BasePlayer player)
         {
 
@@ -138,7 +153,7 @@ namespace Oxide.Plugins
 
 
 
-        [ChatCommand("r")]
+        [ConsoleCommand("r")]
         private void reset()
         {
             ID = 0;
@@ -152,9 +167,17 @@ namespace Oxide.Plugins
 
             }
 
+            wipe();
+
+            playerList = new List<BasePlayer>();
+        }
+
+        [ConsoleCommand("w")]
+        private void wipe()
+        {
             var droppedItems = UnityEngine.GameObject.FindObjectsOfType<DroppedItem>();
             var playerCorpses = UnityEngine.GameObject.FindObjectsOfType<PlayerCorpse>();
-            
+
 
             foreach (var playerCorpse in playerCorpses)
             {
@@ -169,8 +192,13 @@ namespace Oxide.Plugins
             {
                 deadBag.Kill();
             }
+        }
 
-            playerList = new List<BasePlayer>();
+        [ChatCommand("help")]
+        private void help(BasePlayer player)
+        {
+            PrintToChat(player, "'FFA' - Free For All");
+            PrintToChat(player, "'a' - Accept Match");
         }
 
 
