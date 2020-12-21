@@ -7,27 +7,49 @@ namespace Oxide.Plugins
     [Info("Testing stuff", "Willauer", "0.1")]
     public class Games : RustPlugin
     {
-        string[] gameModes = { " ", "Free For All", "Gun Game", "One In The Chamber", "Infected" };
+        string[] gameModes = { " ", "Free For All", "Gun Game", "One In The Chamber", "Infected", "Snipers Only" };
+
+        string[] maps = { " ", "Cargo", "Shipment", "Rust" };
         public enum GameModes
         {
-            nothing, FreeForAll, GunGame, OneInTheChamber, Infected
+            nothing, FreeForAll, GunGame, OneInTheChamber, Infected, SnipersOnly
         }
 
-
-        Item gun;
+        public enum Maps
+        {
+            nothing, Cargo, Shipment, Rust
+        }
 
         List<BasePlayer> playerList = new List<BasePlayer>();
         List<BasePlayer> playerList2 = new List<BasePlayer>();
+        List<BasePlayer> playerList3 = new List<BasePlayer>();
         List<int> playerNumbers = new List<int>();
         List<int> playerNumbers2 = new List<int>();
         List<Vector3> spawns = new List<Vector3>();
+        List<Vector3> spawns2 = new List<Vector3>();
+        List<Vector3> spawns3 = new List<Vector3>();
         List<int> GGWeapons = new List<int>();
+        List<int> voteMap = new List<int>();
 
-        [ChatCommand("s")]
-        private void setSpawnPoint(BasePlayer player) 
+        [ChatCommand("s1")]
+        private void setSpawnPoint1(BasePlayer player) 
         {
             Vector3 spawnPoint = new Vector3(player.transform.position.x, player.transform.position.y, player.transform.position.z);
             spawns.Add(spawnPoint);
+        }
+
+        [ChatCommand("s2")]
+        private void setSpawnPoint2(BasePlayer player)
+        {
+            Vector3 spawnPoint = new Vector3(player.transform.position.x, player.transform.position.y, player.transform.position.z);
+            spawns2.Add(spawnPoint);
+        }
+
+        [ChatCommand("s3")]
+        private void setSpawnPoint3(BasePlayer player)
+        {
+            Vector3 spawnPoint = new Vector3(player.transform.position.x, player.transform.position.y, player.transform.position.z);
+            spawns3.Add(spawnPoint);
         }
 
         Vector3 spawn = new Vector3(0, 0, 0);
@@ -36,6 +58,7 @@ namespace Oxide.Plugins
         bool isStarted = false;
         int ID = 0;
         GameModes EID = 0;
+        Maps MID = 0;
         int counter = 15;
         int infCounter = 15;
 
@@ -49,6 +72,10 @@ namespace Oxide.Plugins
             GGWeapons.Add(442886268); // Rocket
             GGWeapons.Add(884424049); // compound
             GGWeapons.Add(2040726127); // combat knife
+
+            voteMap.Add(0);
+            voteMap.Add(0);
+            voteMap.Add(0);
         }
 
         /* Request game */
@@ -101,6 +128,17 @@ namespace Oxide.Plugins
                 initilizeGame(player, ID);
             }
         }
+        [ChatCommand("SO")]
+        private void SO(BasePlayer player)
+        {
+            if (!isGame)
+            {
+                ID = 5;
+                EID = GameModes.SnipersOnly;
+                playerList.Add(player);
+                initilizeGame(player, ID);
+            }
+        }
 
         /* Join match */
         [ChatCommand("a")]
@@ -117,8 +155,6 @@ namespace Oxide.Plugins
                 PrintToChat(player.displayName + " joined " + gameModes[ID]);
                 switch (EID)
                 {
-                    case GameModes.FreeForAll:
-                        break;
                     case GameModes.GunGame:
                         playerNumbers.Add(0);
                         break;
@@ -127,8 +163,9 @@ namespace Oxide.Plugins
                         playerNumbers.Add(0);
                         playerNumbers2.Add(3);
                         break;
-                    case GameModes.Infected:
+                    default:
                         break;
+                    
                 }
             }
         }
@@ -140,35 +177,111 @@ namespace Oxide.Plugins
             PrintToChat("Enter 'a' to join!");
 
             isGame = true;
-     
-            countDown(ID, counter);
+
+            countDown(15);
             timer.Once(counter + 5, () =>
             {
-                start(ID);
+                pickMap(ID);
             });
 
             switch (EID)
             {
-                case GameModes.FreeForAll:
-                    break;
                 case GameModes.GunGame:
                     playerNumbers.Add(0);
                     break;
-                case GameModes.OneInTheChamber:
+                default:
                     break;
             }
         }
 
+       
+        private void pickMap(int ID)
+        {
+            PrintToChat("Vote for map");
+            for (int i=1; i<maps.Length; i++)
+            {
+                PrintToChat(i.ToString() + ": " + maps[i]);
+            }
+
+            countDown(ID, counter);
+            timer.Once(counter + 5, () =>
+            {
+                whichMap(voteMap);
+                start(ID);
+            });
+            
+        }
+
+        private void whichMap(List<int> voteMap)
+        {
+            int index = 0;
+            int max = voteMap[0];
+            for (int i=1; i<voteMap.Count; i++)
+            {
+                if (max < voteMap[i])
+                {
+                    max = voteMap[i];
+                    index = i;
+                }
+            }
+            
+            switch (index)
+            {
+                
+                case 0:
+                    MID = Maps.Cargo;
+                    break;
+                case 1:
+                    MID = Maps.Shipment;
+                    break;
+                case 2:
+                    MID = Maps.Rust;
+                    break;
+            }
+        }
+
+        [ChatCommand("1")]
+        private void voteCargo(BasePlayer player)
+        {
+            if (!playerList3.Contains(player))
+            {
+                voteMap[0] += 1;
+                playerList3.Add(player);
+            }
+        }
+
+        [ChatCommand("2")]
+        private void voteShipment(BasePlayer player)
+        {
+            if (!playerList3.Contains(player))
+            {
+                voteMap[1] += 1;
+                playerList3.Add(player);
+            }
+        }
+
+        [ChatCommand("3")]
+        private void voteRust(BasePlayer player)
+        {
+            if (!playerList3.Contains(player))
+            {
+                voteMap[2] += 1;
+                playerList3.Add(player);
+            }
+        }
+
+
         /* Start game */
         private void start(int ID)
         {
-            PrintToChat(gameModes[ID] + " STARTING!");
+            PrintToChat(gameModes[ID] + " STARTING on " + MID.ToString() + "!");
 
             isStarted = true;
             wipe();
 
             switch (EID)
             {
+                case GameModes.SnipersOnly:
                 case GameModes.FreeForAll:
                 case GameModes.GunGame:
                 case GameModes.OneInTheChamber:
@@ -232,7 +345,6 @@ namespace Oxide.Plugins
                     player.GiveItem(maxAmmo(1545779598)); // ak
 
                     belt(player, 1079279582, 20); // medical
-                    belt(player, 99588025, 2); // wood wall
                     belt(player, -567909622, 20); // pumpkins
                     break;
 
@@ -240,8 +352,12 @@ namespace Oxide.Plugins
                     player.GiveItem(ItemManager.CreateByItemID(-1211166256, 200)); // 5.56
                     player.GiveItem(ItemManager.CreateByItemID(785728077, 200)); // pistol ammo
                     player.GiveItem(ItemManager.CreateByItemID(-1234735557, 10)); // arrow
-                    player.GiveItem(maxAmmo((GGWeapons[playerNumbers[playerList.LastIndexOf(player)]])));
-                    player.GiveItem(ItemManager.CreateByItemID(2040726127)); // combat knife
+                    player.GiveItem(ItemManager.CreateByItemID(-742865266, 3)); // rockets
+                    
+                    player.GiveItem(maxAmmo(GGWeapons[playerNumbers[playerList.LastIndexOf(player)]]));
+                    
+                    belt(player, 2040726127, 1); // combat knife
+
                     break;
 
                 case GameModes.OneInTheChamber:
@@ -272,12 +388,19 @@ namespace Oxide.Plugins
 
                     }
                     break;
+                case GameModes.SnipersOnly:
+                    chest(player, -1211166256, 200); // 5.56
+                    chest(player, 567235583, 1); // 8x scope
+
+                    player.GiveItem(maxAmmo(-778367295)); // L96
+                    break;
             }
         }
 
         void OnPlayerAttack(BasePlayer attacker, HitInfo info)
         {
            if (isStarted && (playerList.Contains(attacker) || playerList2.Contains(attacker))) {
+
                 switch (EID)
                 {
                     case GameModes.FreeForAll:
@@ -287,20 +410,23 @@ namespace Oxide.Plugins
                         {
                             Rust.DamageType hit = info.damageTypes.GetMajorityDamageType();
                             BasePlayer victim = info.HitEntity.ToPlayer();
-                            if (hit == Rust.DamageType.Slash || hit == Rust.DamageType.Fun_Water)
+                            PrintToChat(playerNumbers[playerList.LastIndexOf(attacker)].ToString());
+                            if (playerNumbers[playerList.LastIndexOf(attacker)] == GGWeapons.Count - 1)
+                            {
+                                PrintToChat(attacker.displayName + " has won " + gameModes[ID] + "!");
+                                reset();
+                                victim.DieInstantly();
+
+                            } else if (hit == Rust.DamageType.Slash || hit == Rust.DamageType.Fun_Water)
                             {
                                 victim.DieInstantly();
-                                /* Win condition */
-                                if (playerNumbers[playerList.LastIndexOf(attacker)] == GGWeapons.Count - 1)
-                                {
-                                    PrintToChat(attacker.displayName + " has won " + gameModes[ID] + "!");
-                                    reset();
-                                }
-                                else if (playerNumbers[playerList.LastIndexOf(victim)] > 0)
+                                if (playerNumbers[playerList.LastIndexOf(victim)] > 0)
                                 {
                                     playerNumbers[playerList.LastIndexOf(victim)] -= 1;
+
                                 }
                             }
+
                         }
                         catch { }
                         break;
@@ -468,15 +594,29 @@ namespace Oxide.Plugins
                     case GameModes.FreeForAll:
                         break;
                     case GameModes.GunGame:
-                        BasePlayer killer = info.InitiatorPlayer.ToPlayer();
-                        player.DieInstantly();
-                        PrintToChat(killer.displayName + " has killed " + player.displayName + "!");
+                        try
+                        {
+                            BasePlayer killer = info.InitiatorPlayer.ToPlayer();
+                            player.DieInstantly();
+                            PrintToChat(killer.displayName + " has killed " + player.displayName + "!");
 
-                        /* Next weapon */
-                        playerNumbers[playerList.LastIndexOf(killer)] += 1;
-                        strip(killer);
-                        giveItems(killer);
-                        wipe();
+                            /* Next weapon */
+                            if (player == killer)
+                            {
+                                if (playerNumbers[playerList.LastIndexOf(killer)] > 0)
+                                {
+                                    playerNumbers[playerList.LastIndexOf(killer)] -= 1;
+                                }
+                            }
+                            else
+                            {
+                                playerNumbers[playerList.LastIndexOf(killer)] += 1;
+                            }
+                            strip(killer);
+                            giveItems(killer);
+                            wipe();
+                        }
+                        catch { }
 
                         break;
                     case GameModes.OneInTheChamber:
@@ -493,10 +633,12 @@ namespace Oxide.Plugins
         void OnPlayerRespawned(BasePlayer player)
         {
             player.MovePosition(spawn);
+            strip(player);
             if (isStarted && (playerList.Contains(player) || playerList2.Contains(player)))
             {
                 switch (EID)
                 {
+                    case GameModes.SnipersOnly:
                     case GameModes.FreeForAll:
                         teleport(player);
                         giveItems(player);
@@ -523,7 +665,7 @@ namespace Oxide.Plugins
             }
         }
 
-        [ConsoleCommand("r")]
+        [ConsoleCommand("rr")]
         private void reset()
         {
             ID = 0;
@@ -534,11 +676,29 @@ namespace Oxide.Plugins
             cleanPlayers();
             wipe();
 
+            foreach (BasePlayer player in playerList)
+            {
+                player.MovePosition(spawn);
+            }
+            foreach (BasePlayer player in playerList2)
+            {
+                player.MovePosition(spawn);
+            }
+
             playerList = new List<BasePlayer>();
             playerList2 = new List<BasePlayer>();
+            playerList3 = new List<BasePlayer>();
+            voteMap = new List<int>();
+            voteMap.Add(0);
+            voteMap.Add(0);
+            voteMap.Add(0);
             playerNumbers = new List<int>();
             playerNumbers2 = new List<int>();
-            // List<Vector3> spawns = new List<Vector3>();
+
+            voteMap[0] = 0;
+            voteMap[1] = 0;
+            MID = Maps.nothing;
+
         }
 
         void strip(BasePlayer player)
@@ -616,6 +776,7 @@ namespace Oxide.Plugins
         private void belt(BasePlayer player, int item, int ammount)
         {
             ItemDefinition itemToCreate = ItemManager.FindItemDefinition(item);
+        
             player.inventory.containerBelt.AddItem(itemToCreate, ammount);
         }
 
@@ -637,6 +798,22 @@ namespace Oxide.Plugins
                     item.Remove();
                 }
             }
+            foreach (BasePlayer player in playerList2)
+            {
+                foreach (var item in player.inventory.containerBelt.itemList)
+                {
+                    item.Remove();
+                }
+                foreach (var item in player.inventory.containerMain.itemList)
+                {
+                    item.Remove();
+                }
+                foreach (var item in player.inventory.containerWear.itemList)
+                {
+                    item.Remove();
+                }
+            }
+
         }
 
         /* Teleports player to a valid spawn */
@@ -654,7 +831,21 @@ namespace Oxide.Plugins
                 });
                 timer.Once(telCounter, () =>
                 {
-                    player.MovePosition(spawns[Random.Range(0, spawns.Count)]);
+                    switch (MID)
+                    {
+                        case Maps.nothing:
+                        case Maps.Cargo:
+                            player.MovePosition(spawns[Random.Range(0, spawns.Count)]);
+                            break;
+                        case Maps.Shipment:
+                            player.MovePosition(spawns2[Random.Range(0, spawns2.Count)]);
+                            break;
+                        case Maps.Rust:
+                            player.MovePosition(spawns3[Random.Range(0, spawns3.Count)]);
+                            break;
+                     
+                    }
+                    
                 });
                 
             } else
@@ -672,6 +863,33 @@ namespace Oxide.Plugins
             });
         }
 
+        private void countDown(int counter)
+        {
+            timer.Repeat(counter / 3f, 3, () =>
+            {
+                PrintToChat(counter + " seconds to join!");
+                counter -= 5;
+            });
+        }
+
+      
+        private void OnEntitySpawned(BaseNpc entity)
+        {
+            timer.Once(1f, () => {
+                foreach (var npc in UnityEngine.Object.FindObjectsOfType<BaseNpc>())
+                {
+                    if (npc == null)
+                    {
+                        return;
+                    }
+
+                    npc.Kill();
+
+                }
+                ; });
+        }
+
+
         [ChatCommand("ss")]
         private void settingSpawn(BasePlayer player)
         {
@@ -679,18 +897,24 @@ namespace Oxide.Plugins
             spawn += new Vector3(player.transform.position.x, player.transform.position.y, player.transform.position.z);
         }
 
-        [ChatCommand("ins")]
+        [ChatCommand("drop")]
         private void setInfSpawn(BasePlayer player)
         {
-            infSpawn = new Vector3(player.transform.position.x, 450, player.transform.position.z);
+            infSpawn = new Vector3(player.transform.position.x, 400, player.transform.position.z);
         }
 
         /* Clears map of bodies, body bags, and items */
-        [ConsoleCommand("w")]
+        [ConsoleCommand("wipe")]
         private void wipe()
         {
             var droppedItems = UnityEngine.GameObject.FindObjectsOfType<DroppedItem>();
             var playerCorpses = UnityEngine.GameObject.FindObjectsOfType<PlayerCorpse>();
+            foreach (var npc in UnityEngine.Object.FindObjectsOfType<BaseCorpse>())
+            {
+
+                npc.Kill();
+
+            }
 
             foreach (var playerCorpse in playerCorpses)
             {
@@ -714,6 +938,7 @@ namespace Oxide.Plugins
             PrintToChat(player, "gg - Gun Game");
             PrintToChat(player, "oic - One In The Chamber");
             PrintToChat(player, "inf - Infected");
+            PrintToChat(player, "so - Snipers Only");
             PrintToChat(player, "a - Accept Match");
         }
 
