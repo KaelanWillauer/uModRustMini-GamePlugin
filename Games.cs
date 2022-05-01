@@ -1,18 +1,19 @@
 ﻿using System.Collections.Generic;
 using Oxide.Core.Libraries.Covalence;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace Oxide.Plugins
 {
-    [Info("Testing stuff", "Willauer", "0.1")]
+    [Info("Testing stuff", "Willauer", "0.2")]
     public class Games : RustPlugin
     {
-        string[] gameModes = { " ", "Free For All", "Gun Game", "One In The Chamber", "Infected", "Snipers Only" };
+        string[] gameModes = { " ", "Free For All", "Gun Game", "One In The Chamber", "Infected", "Snipers Only", "Tanks n Nails", "Zookas" };
 
         string[] maps = { " ", "Cargo", "Shipment", "Rust" };
         public enum GameModes
         {
-            nothing, FreeForAll, GunGame, OneInTheChamber, Infected, SnipersOnly
+            nothing, FreeForAll, GunGame, OneInTheChamber, Infected, SnipersOnly, TanksnNails, Zookas
         }
 
         public enum Maps
@@ -32,7 +33,7 @@ namespace Oxide.Plugins
         List<int> voteMap = new List<int>();
 
         [ChatCommand("s1")]
-        private void setSpawnPoint1(BasePlayer player) 
+        private void setSpawnPoint1(BasePlayer player)
         {
             Vector3 spawnPoint = new Vector3(player.transform.position.x, player.transform.position.y, player.transform.position.z);
             spawns.Add(spawnPoint);
@@ -64,7 +65,7 @@ namespace Oxide.Plugins
 
         private void Loaded()
         {
-            PrintToChat("Injected");
+            PrintToChat("INJECTUSTUPIDFUC");
             GGWeapons.Add(-1812555177); // lr
             GGWeapons.Add(1545779598); // ak
             GGWeapons.Add(1796682209); // custom
@@ -140,6 +141,30 @@ namespace Oxide.Plugins
             }
         }
 
+        [ChatCommand("TNN")]
+        private void TNN(BasePlayer player)
+        {
+            if (!isGame)
+            {
+                ID = 6;
+                EID = GameModes.TanksnNails;
+                playerList.Add(player);
+                initilizeGame(player, ID);
+            }
+        }
+
+        [ChatCommand("ZOO")]
+        private void ZOO(BasePlayer player)
+        {
+            if (!isGame)
+            {
+                ID = 6;
+                EID = GameModes.Zookas;
+                playerList.Add(player);
+                initilizeGame(player, ID);
+            }
+        }
+
         /* Join match */
         [ChatCommand("a")]
         private void accept(BasePlayer player)
@@ -165,7 +190,7 @@ namespace Oxide.Plugins
                         break;
                     default:
                         break;
-                    
+
                 }
             }
         }
@@ -194,11 +219,11 @@ namespace Oxide.Plugins
             }
         }
 
-       
+
         private void pickMap(int ID)
         {
             PrintToChat("Vote for map");
-            for (int i=1; i<maps.Length; i++)
+            for (int i = 1; i < maps.Length; i++)
             {
                 PrintToChat(i.ToString() + ": " + maps[i]);
             }
@@ -209,14 +234,14 @@ namespace Oxide.Plugins
                 whichMap(voteMap);
                 start(ID);
             });
-            
+
         }
 
         private void whichMap(List<int> voteMap)
         {
             int index = 0;
             int max = voteMap[0];
-            for (int i=1; i<voteMap.Count; i++)
+            for (int i = 1; i < voteMap.Count; i++)
             {
                 if (max < voteMap[i])
                 {
@@ -224,10 +249,10 @@ namespace Oxide.Plugins
                     index = i;
                 }
             }
-            
+
             switch (index)
             {
-                
+
                 case 0:
                     MID = Maps.Cargo;
                     break;
@@ -282,8 +307,10 @@ namespace Oxide.Plugins
             switch (EID)
             {
                 case GameModes.SnipersOnly:
+                case GameModes.Zookas:
                 case GameModes.FreeForAll:
                 case GameModes.GunGame:
+                case GameModes.TanksnNails:
                 case GameModes.OneInTheChamber:
                     foreach (BasePlayer player in playerList)
                     {
@@ -299,7 +326,7 @@ namespace Oxide.Plugins
                         giveItems(player);
                         teleport(player);
                     }
-    
+
                     timer.Repeat(infCounter / 3f, 3, () =>
                     {
                         PrintToChat("First infected in " + infCounter.ToString());
@@ -308,7 +335,7 @@ namespace Oxide.Plugins
                     timer.Once(infCounter + 5, () =>
                     {
                         int first = Random.Range(0, playerList.Count);
-                    
+
                         playerList2.Add(playerList[first]);
                         playerList.RemoveAt(first);
                         giveItems(playerList2[0]);
@@ -353,9 +380,9 @@ namespace Oxide.Plugins
                     player.GiveItem(ItemManager.CreateByItemID(785728077, 200)); // pistol ammo
                     player.GiveItem(ItemManager.CreateByItemID(-1234735557, 10)); // arrow
                     player.GiveItem(ItemManager.CreateByItemID(-742865266, 3)); // rockets
-                    
+
                     player.GiveItem(maxAmmo(GGWeapons[playerNumbers[playerList.LastIndexOf(player)]]));
-                    
+
                     belt(player, 2040726127, 1); // combat knife
 
                     break;
@@ -394,12 +421,28 @@ namespace Oxide.Plugins
 
                     player.GiveItem(maxAmmo(-778367295)); // L96
                     break;
+                case GameModes.TanksnNails:
+                    wear(player, 1181207482); // heavy helmet
+                    wear(player, -1102429027); // heavy jacket
+                    wear(player, -1778159885); // heavy pants
+
+                    belt(player, 1953903201, 1); // nailgun
+                    belt(player, 1079279582, 20); // medical
+                    chest(player, -2097376851, 200); // nails
+                    break;
+                case GameModes.Zookas:
+                    player.GiveItem(maxAmmo(442886268)); // Rocket Launcher
+                    belt(player, -742865266, 9); // rocket
+                    belt(player, 1638322904, 10); // incen rocket
+                    belt(player, -1841918730, 10); // high rocket
+                    break;
             }
         }
 
         void OnPlayerAttack(BasePlayer attacker, HitInfo info)
         {
-           if (isStarted && (playerList.Contains(attacker) || playerList2.Contains(attacker))) {
+            if (isStarted && (playerList.Contains(attacker) || playerList2.Contains(attacker)))
+            {
 
                 switch (EID)
                 {
@@ -410,14 +453,15 @@ namespace Oxide.Plugins
                         {
                             Rust.DamageType hit = info.damageTypes.GetMajorityDamageType();
                             BasePlayer victim = info.HitEntity.ToPlayer();
-                            PrintToChat(playerNumbers[playerList.LastIndexOf(attacker)].ToString());
+                            //PrintToChat(playerNumbers[playerList.LastIndexOf(attacker)].ToString());
                             if (playerNumbers[playerList.LastIndexOf(attacker)] == GGWeapons.Count - 1)
                             {
                                 PrintToChat(attacker.displayName + " has won " + gameModes[ID] + "!");
                                 reset();
                                 victim.DieInstantly();
 
-                            } else if (hit == Rust.DamageType.Slash || hit == Rust.DamageType.Fun_Water)
+                            }
+                            else if (hit == Rust.DamageType.Slash || hit == Rust.DamageType.Fun_Water)
                             {
                                 victim.DieInstantly();
                                 if (playerNumbers[playerList.LastIndexOf(victim)] > 0)
@@ -522,24 +566,24 @@ namespace Oxide.Plugins
         private object OnEntityTakeDamage(BaseCombatEntity entity, HitInfo info)
         {
             /* Remove all fall damage */
- 
-                Rust.DamageType damageType = info.damageTypes.GetMajorityDamageType();
-                if (damageType == Rust.DamageType.Fall)
-                {
-                    info.damageTypes.Set(damageType, 0);
-                }
 
-                switch (EID)
-                {
-                    case GameModes.FreeForAll:
-                        break;
-                    case GameModes.GunGame:
-                        break;
-                    case GameModes.OneInTheChamber:
-                        break;
-                    case GameModes.Infected:
+            Rust.DamageType damageType = info.damageTypes.GetMajorityDamageType();
+            if (damageType == Rust.DamageType.Fall)
+            {
+                info.damageTypes.Set(damageType, 0);
+            }
+
+            switch (EID)
+            {
+                case GameModes.FreeForAll:
                     break;
-                }
+                case GameModes.GunGame:
+                    break;
+                case GameModes.OneInTheChamber:
+                    break;
+                case GameModes.Infected:
+                    break;
+            }
             return null;
         }
 
@@ -556,6 +600,8 @@ namespace Oxide.Plugins
                 case GameModes.OneInTheChamber:
                     break;
                 case GameModes.Infected:
+                case GameModes.Zookas:
+                case GameModes.TanksnNails:
                     wipe();
                     break;
 
@@ -575,6 +621,7 @@ namespace Oxide.Plugins
                 case GameModes.OneInTheChamber:
                     break;
                 case GameModes.Infected:
+                case GameModes.Zookas:
                     strip(player);
                     break;
             }
@@ -582,7 +629,7 @@ namespace Oxide.Plugins
 
         void OnLootEntity(BasePlayer player, BaseEntity entity)
         {
-            
+
         }
 
         object OnPlayerDeath(BasePlayer player, HitInfo info)
@@ -639,6 +686,8 @@ namespace Oxide.Plugins
                 switch (EID)
                 {
                     case GameModes.SnipersOnly:
+                    case GameModes.Zookas:
+                    case GameModes.TanksnNails:
                     case GameModes.FreeForAll:
                         teleport(player);
                         giveItems(player);
@@ -741,7 +790,7 @@ namespace Oxide.Plugins
             BaseProjectile gunAmmo = gun.GetHeldEntity() as BaseProjectile;
 
             gunAmmo.primaryMagazine.contents = rocketammo.primaryMagazine.capacity;
-            for (int i = 0; i < ammount-1; i++)
+            for (int i = 0; i < ammount - 1; i++)
             {
                 gunAmmo.primaryMagazine.contents += rocketammo.primaryMagazine.capacity;
             }
@@ -754,7 +803,7 @@ namespace Oxide.Plugins
         {
             var rocket = ItemManager.CreateByItemID(442886268);
             var rocketammo = rocket.GetHeldEntity() as BaseProjectile;
-        
+
             BaseProjectile gunAmmo = item.GetHeldEntity() as BaseProjectile;
 
             gunAmmo.primaryMagazine.contents += rocketammo.primaryMagazine.capacity;
@@ -776,7 +825,7 @@ namespace Oxide.Plugins
         private void belt(BasePlayer player, int item, int ammount)
         {
             ItemDefinition itemToCreate = ItemManager.FindItemDefinition(item);
-        
+
             player.inventory.containerBelt.AddItem(itemToCreate, ammount);
         }
 
@@ -843,12 +892,13 @@ namespace Oxide.Plugins
                         case Maps.Rust:
                             player.MovePosition(spawns3[Random.Range(0, spawns3.Count)]);
                             break;
-                     
+
                     }
-                    
+
                 });
-                
-            } else
+
+            }
+            else
             {
                 player.MovePosition(spawn);
             }
@@ -872,7 +922,7 @@ namespace Oxide.Plugins
             });
         }
 
-      
+
         private void OnEntitySpawned(BaseNpc entity)
         {
             timer.Once(1f, () => {
@@ -886,7 +936,8 @@ namespace Oxide.Plugins
                     npc.Kill();
 
                 }
-                ; });
+                ;
+            });
         }
 
 
@@ -939,6 +990,8 @@ namespace Oxide.Plugins
             PrintToChat(player, "oic - One In The Chamber");
             PrintToChat(player, "inf - Infected");
             PrintToChat(player, "so - Snipers Only");
+            PrintToChat(player, "tnn - Tanks n' Nails");
+            PrintToChat(player, "zoo - Zookas");
             PrintToChat(player, "a - Accept Match");
         }
 
