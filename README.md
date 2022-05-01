@@ -1,10 +1,10 @@
 # uModRustMini-GamePlugin
 Mini-Game system manager developed with the uMod API for Rust. Originally created to manage other plugins’ games, the manager acts as a simple method to add custom game-modes to Rust.
-Although created around patch [234](https://rust.facepunch.com/changes/2), this plugin runs fully functional as of May 6, 2021 on patch [241](https://rust.facepunch.com/changes/1). The map is still supported by [241](https://rust.facepunch.com/changes/1) but must be re-exported from [RustEdit](https://www.rustedit.io/). 
+Although created around patch [234](https://rust.facepunch.com/news/community-update-234), this plugin runs fully functional as of May 1, 2022 on patch [APRIL2022UPDATE](https://rust.facepunch.com/changelist/3921). The map is still supported but may need to be re-exported from [RustEdit](https://www.rustedit.io/). 
 
 # Systems
 * Spawn system
-> Allows an admin to create a server spawn and set any number of spawns for up to 3 custom maps.
+> Allows an admin to create a server spawn and set custom spawns for maps.
 * Game joining system
 > Game creation starts from any player and others may join during the countdown. Only one game may run at a time, however simultaneous games are almost supported.
 * Map voting system
@@ -16,6 +16,7 @@ Although created around patch [234](https://rust.facepunch.com/changes/2), this 
 * Infected
 * Snipers Only
 * Tanks n Nails
+* Zookas
 # Maps (Day/Night)
 ## Shipment
 ![](/Photos/ShipmentDay.png)
