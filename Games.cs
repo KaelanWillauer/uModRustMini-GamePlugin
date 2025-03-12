@@ -65,7 +65,6 @@ namespace Oxide.Plugins
 
         private void Loaded()
         {
-            PrintToChat("INJECTUSTUPIDFUC");
             GGWeapons.Add(-1812555177); // lr
             GGWeapons.Add(1545779598); // ak
             GGWeapons.Add(1796682209); // custom
