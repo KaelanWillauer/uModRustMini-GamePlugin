@@ -437,7 +437,7 @@ namespace Oxide.Plugins
                     break;
             }
         }
-
+        // no
         void OnPlayerAttack(BasePlayer attacker, HitInfo info)
         {
             if (isStarted && (playerList.Contains(attacker) || playerList2.Contains(attacker)))
