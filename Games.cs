@@ -452,7 +452,6 @@ namespace Oxide.Plugins
                         {
                             Rust.DamageType hit = info.damageTypes.GetMajorityDamageType();
                             BasePlayer victim = info.HitEntity.ToPlayer();
-                            //PrintToChat(playerNumbers[playerList.LastIndexOf(attacker)].ToString());
                             if (playerNumbers[playerList.LastIndexOf(attacker)] == GGWeapons.Count - 1)
                             {
                                 PrintToChat(attacker.displayName + " has won " + gameModes[ID] + "!");
